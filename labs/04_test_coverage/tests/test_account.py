@@ -52,4 +52,62 @@ class TestAccountModel(TestCase):
         account = Account(**data)
         account.create()
         self.assertEqual(len(Account.all()), 1)
+    
+    def test_repr(self):
+        """Test the representation of an account"""
+        account = Account()
+        account.name = "Foo"
+        self.assertEqual(str(account), "<Account 'Foo'>")
+    
+    def test_to_dict(self):
+        """ Test account to dict """
+        data = ACCOUNT_DATA[self.rand] # get a random account
+        account = Account(**data)
+        result = account.to_dict()
+        keys = list(result.keys())
+        for key in keys:
+            self.assertEqual(getattr(account,key), result[f"{key}"])
+    
+    def test_from_dict(self):
+        """ Test account from dict """
+        data = ACCOUNT_DATA[self.rand] # get a random account
+        account = Account()
+        account.from_dict(data)
+        keys = list(data.keys())
+        for key in keys:
+            self.assertEqual(getattr(account,key), data[f"{key}"])
 
+    def test_update_an_account(self):
+        """ Test Account update using known data """
+        data = ACCOUNT_DATA[self.rand] # get a random account
+        account = Account(**data)
+        account.create()
+        new_data = {
+            "name": "Trust",
+            "email": "test@gmail.com",
+            "phone_number": "+123456789"
+        }
+        self.assertIsNotNone(account.id)
+        for key, val in new_data.items():  
+            setattr(account, key, val) 
+        account.update()
+        found = Account.find(account.id)
+        
+        for key, val in new_data.items():
+            self.assertEqual(getattr(found, key), val)
+
+    def test_invalid_id_on_update(self):
+        """ Test invalid ID update """
+        data = ACCOUNT_DATA[self.rand] # get a random account
+        account = Account(**data)
+        account.id = None
+        self.assertRaises(DataValidationError, account.update)
+
+    def test_delete_an_account(self):
+        """ Test Account update using known data """
+        data = ACCOUNT_DATA[self.rand] # get a random account
+        account = Account(**data)
+        account.create()
+        self.assertEqual(len(Account.all()), 1)
+        account.delete()
+        self.assertEqual(len(Account.all()), 0)
